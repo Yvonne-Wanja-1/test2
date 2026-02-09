@@ -43,8 +43,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     });
 
     try {
-      // Since we only allow Gmail sign-in, password reset via email isn't typical
-      // But we'll show a message explaining the recovery process
+      await AuthService().sendPasswordResetEmail(email: _emailController.text);
       setState(() {
         _successMessage =
             'Password recovery link sent to ${_emailController.text}. Please check your email.';
@@ -59,7 +58,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Error: $e';
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
         });
       }
     } finally {
