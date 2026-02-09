@@ -68,6 +68,19 @@ class AuthService {
     }
   }
 
+  // Delete account
+  Future<void> deleteAccount() async {
+    try {
+      final user = currentUser;
+      if (user != null) {
+        await _supabaseClient.auth.admin.deleteUser(user.id);
+        await _supabaseClient.auth.signOut();
+      }
+    } catch (e) {
+      throw Exception('Error deleting account: $e');
+    }
+  }
+
   // Check authentication state
   Stream<AuthState> get authStateChanges =>
       _supabaseClient.auth.onAuthStateChange;

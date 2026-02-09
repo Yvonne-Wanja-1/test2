@@ -1,46 +1,42 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';
+import 'sign_in_screen.dart';
 
-class RegistrationScreen extends StatefulWidget {
-  final VoidCallback onRegistrationSuccess;
+class UpdatePasswordScreen extends StatefulWidget {
+  final VoidCallback? onPasswordUpdateSuccess;
 
-  const RegistrationScreen({Key? key, required this.onRegistrationSuccess})
+  const UpdatePasswordScreen({Key? key, this.onPasswordUpdateSuccess})
     : super(key: key);
 
   @override
-  State<RegistrationScreen> createState() => _RegistrationScreenState();
+  State<UpdatePasswordScreen> createState() => _UpdatePasswordScreenState();
 }
 
-class _RegistrationScreenState extends State<RegistrationScreen> {
-  late TextEditingController _emailController;
-  late TextEditingController _passwordController;
+class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
+  late TextEditingController _newPasswordController;
   late TextEditingController _confirmPasswordController;
   bool _isLoading = false;
-  String? _errorMessage;
-  bool _agreeToTerms = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String? _errorMessage;
+  String? _successMessage;
 
   @override
   void initState() {
     super.initState();
-    _emailController = TextEditingController();
-    _passwordController = TextEditingController();
+    _newPasswordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSignUp() async {
-    if (_emailController.text.isEmpty ||
-        _passwordController.text.isEmpty ||
+  Future<void> _handleUpdatePassword() async {
+    if (_newPasswordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
       setState(() {
         _errorMessage = 'Please fill in all fields';
@@ -48,30 +44,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
-    if (!_emailController.text.contains('@')) {
-      setState(() {
-        _errorMessage = 'Please enter a valid email address';
-      });
-      return;
-    }
-
-    if (_passwordController.text.length < 6) {
+    if (_newPasswordController.text.length < 6) {
       setState(() {
         _errorMessage = 'Password must be at least 6 characters';
       });
       return;
     }
 
-    if (_passwordController.text != _confirmPasswordController.text) {
+    if (_newPasswordController.text != _confirmPasswordController.text) {
       setState(() {
         _errorMessage = 'Passwords do not match';
-      });
-      return;
-    }
-
-    if (!_agreeToTerms) {
-      setState(() {
-        _errorMessage = 'Please agree to the terms and conditions';
       });
       return;
     }
@@ -79,19 +61,35 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _successMessage = null;
     });
 
     try {
-      await AuthService().signUpWithEmailPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
+      await AuthService().updatePassword(
+        newPassword: _newPasswordController.text,
       );
-      if (mounted) {
-        // Navigate directly to HomeScreen after successful registration
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (route) => false,
-        );
+      setState(() {
+        _successMessage =
+            'Password updated successfully! Redirecting to sign in...';
+      });
+
+      // Call the success callback if provided
+      if (widget.onPasswordUpdateSuccess != null) {
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          widget.onPasswordUpdateSuccess!();
+        }
+      } else {
+        // Fallback: Redirect to sign in after 2 seconds
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => SignInScreen(onSignInSuccess: () {}),
+            ),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -140,17 +138,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     shape: BoxShape.circle,
                     color: Colors.white.withOpacity(0.1),
                   ),
-                  child: Icon(
-                    Icons.app_registration,
-                    size: 64,
-                    color: Colors.white,
-                  ),
+                  child: Icon(Icons.lock, size: 64, color: Colors.white),
                 ),
                 const SizedBox(height: 32),
 
                 // Title
                 Text(
-                  'Create Account',
+                  'Set New Password',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -158,7 +152,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Create a new account',
+                  'Enter your new password',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
@@ -181,40 +175,29 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 if (_errorMessage != null) const SizedBox(height: 24),
 
-                // Email field
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Email address',
-                    hintStyle: const TextStyle(color: Colors.white70),
-                    prefixIcon: const Icon(Icons.email, color: Colors.white70),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    border: OutlineInputBorder(
+                // Success message
+                if (_successMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.2),
+                      border: Border.all(color: Colors.green),
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
-                      ),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
-                      ),
+                    child: Text(
+                      _successMessage!,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
+                if (_successMessage != null) const SizedBox(height: 24),
 
-                // Password field
+                // New Password field
                 TextField(
-                  controller: _passwordController,
+                  controller: _newPasswordController,
                   obscureText: _obscurePassword,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Password',
+                    hintText: 'New Password',
                     hintStyle: const TextStyle(color: Colors.white70),
                     prefixIcon: const Icon(Icons.lock, color: Colors.white70),
                     suffixIcon: IconButton(
@@ -248,13 +231,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Confirm password field
+                // Confirm Password field
                 TextField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Confirm password',
+                    hintText: 'Confirm Password',
                     hintStyle: const TextStyle(color: Colors.white70),
                     prefixIcon: const Icon(Icons.lock, color: Colors.white70),
                     suffixIcon: IconButton(
@@ -286,52 +269,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
-                // Terms and conditions checkbox
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Checkbox(
-                        value: _agreeToTerms,
-                        onChanged: (value) {
-                          setState(() {
-                            _agreeToTerms = value ?? false;
-                          });
-                        },
-                        checkColor: Colors.deepPurple,
-                        fillColor: MaterialStateProperty.all(Colors.white),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _agreeToTerms = !_agreeToTerms;
-                            });
-                          },
-                          child: Text(
-                            'I agree to the Terms of Service and Privacy Policy',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.white70),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Sign up button
+                // Update Password button
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _handleSignUp,
+                  onPressed: _isLoading ? null : _handleUpdatePassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.deepPurple,
@@ -356,14 +298,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ),
                         )
                       : Text(
-                          _isLoading ? 'Creating Account...' : 'Create Account',
+                          _isLoading ? 'Updating...' : 'Update Password',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
                 // Info box
                 Container(
@@ -373,7 +315,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Create a secure account with email and password. Your data is encrypted and protected.',
+                    'Your password must be at least 6 characters long. Make sure it\'s a strong password.',
+                    textAlign: TextAlign.center,
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: Colors.white70),
