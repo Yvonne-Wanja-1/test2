@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
+import 'user_profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -11,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late User? currentUser;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -49,6 +51,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _navigateToProfile() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const UserProfileScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,6 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Home'),
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: _navigateToProfile,
+          ),
           IconButton(icon: const Icon(Icons.logout), onPressed: _handleSignOut),
         ],
       ),

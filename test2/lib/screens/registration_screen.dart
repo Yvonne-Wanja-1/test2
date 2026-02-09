@@ -32,7 +32,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     try {
       await AuthService().signInWithGoogle();
       if (mounted) {
-        onRegistrationSuccess();
+        widget.onRegistrationSuccess();
       }
     } catch (e) {
       if (mounted) {
