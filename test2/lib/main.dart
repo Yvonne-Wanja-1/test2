@@ -9,8 +9,8 @@ void main() async {
 
   // Initialize Supabase - Update these with your Supabase credentials
   await AuthService().initialize(
-    supabaseUrl: 'YOUR_SUPABASE_URL',
-    supabaseAnonKey: 'YOUR_SUPABASE_ANON_KEY',
+    supabaseUrl: 'https://byfzmfnmsfwkwcmepclp.supabase.co',
+    supabaseAnonKey: 'sb_publishable_UVSt_8v_1tWjT-3ObX0S3A_fsflCP1U',
   );
 
   runApp(const MyApp());
