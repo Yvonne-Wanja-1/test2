@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'registration_screen.dart';
+import 'password_reset_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   final VoidCallback onSignInSuccess;
@@ -39,6 +41,21 @@ class _SignInScreenState extends State<SignInScreen> {
         });
       }
     }
+  }
+
+  void _navigateToRegistration() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            RegistrationScreen(onRegistrationSuccess: widget.onSignInSuccess),
+      ),
+    );
+  }
+
+  void _navigateToPasswordReset() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const PasswordResetScreen()),
+    );
   }
 
   @override
@@ -128,16 +145,74 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           ),
                         )
-                      : Image.asset(
-                          'assets/google_logo.png',
-                          width: 20,
-                          height: 20,
-                        ),
+                      : const Icon(Icons.mail),
                   label: Text(
                     _isLoading ? 'Signing in...' : 'Sign in with Gmail',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Divider
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'OR',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Sign up link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    GestureDetector(
+                      onTap: _navigateToRegistration,
+                      child: const Text(
+                        'Create one',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Forgot password link
+                GestureDetector(
+                  onTap: _navigateToPasswordReset,
+                  child: Text(
+                    'Forgot your access?',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
