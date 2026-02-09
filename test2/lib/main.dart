@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/auth_splash_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/profile_completion_screen.dart';
 import 'services/auth_service.dart';
 
 void main() async {
@@ -80,20 +79,8 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
         final user = session?.user;
 
         if (session != null) {
-          // Check if user profile is complete
-          final profileComplete = user?.userMetadata?['profile_complete'] ?? false;
-          
-          if (profileComplete) {
-            // User is signed in and profile is complete
-            return const HomeScreen();
-          } else {
-            // User is signed in but needs to complete profile
-            return ProfileCompletionScreen(
-              onProfileComplete: () {
-                // Navigation happens automatically via StreamBuilder
-              },
-            );
-          }
+          // User is signed in, go directly to home screen
+          return const HomeScreen();
         } else {
           // User is not signed in
           return SignInScreen(

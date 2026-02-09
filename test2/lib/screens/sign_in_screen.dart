@@ -14,24 +14,58 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String? _errorMessage;
 
-  Future<void> _handleGoogleSignIn() async {
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSignIn() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please fill in all fields';
+      });
+      return;
+    }
+
+    if (!_emailController.text.contains('@')) {
+      setState(() {
+        _errorMessage = 'Please enter a valid email address';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      await AuthService().signInWithGoogle();
+      await AuthService().signInWithEmailPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
       if (mounted) {
         widget.onSignInSuccess();
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString();
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
         });
       }
     } finally {
@@ -88,7 +122,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                 // Welcome text
                 Text(
-                  'Welcome',
+                  'Welcome Back',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -96,7 +130,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in to continue',
+                  'Sign in to your account',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
@@ -119,14 +153,81 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 if (_errorMessage != null) const SizedBox(height: 24),
 
-                // Google Sign-in Button
-                ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _handleGoogleSignIn,
+                // Email field
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Email address',
+                    hintStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.email, color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Password field
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    hintStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.lock, color: Colors.white70),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Sign in button
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _handleSignIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.deepPurple,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
+                      horizontal: 48,
                       vertical: 16,
                     ),
                     shape: RoundedRectangleBorder(
@@ -134,7 +235,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     elevation: 4,
                   ),
-                  icon: _isLoading
+                  child: _isLoading
                       ? SizedBox(
                           width: 20,
                           height: 20,
@@ -145,12 +246,24 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           ),
                         )
-                      : const Icon(Icons.mail),
-                  label: Text(
-                    _isLoading ? 'Signing in...' : 'Sign in with Gmail',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      : Text(
+                          _isLoading ? 'Signing in...' : 'Sign In',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 24),
+
+                // Forgot password link
+                GestureDetector(
+                  onTap: _navigateToPasswordReset,
+                  child: Text(
+                    'Forgot password?',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
@@ -202,36 +315,6 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 16),
-
-                // Forgot password link
-                GestureDetector(
-                  onTap: _navigateToPasswordReset,
-                  child: Text(
-                    'Forgot your access?',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // Info text
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'We use Gmail for secure and quick authentication. Your personal data is kept private and secure.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.white70),
-                  ),
                 ),
               ],
             ),

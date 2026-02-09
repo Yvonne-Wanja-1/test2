@@ -12,11 +12,62 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+  late TextEditingController _confirmPasswordController;
   bool _isLoading = false;
   String? _errorMessage;
   bool _agreeToTerms = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
-  Future<void> _handleGoogleSignUp() async {
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSignUp() async {
+    if (_emailController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please fill in all fields';
+      });
+      return;
+    }
+
+    if (!_emailController.text.contains('@')) {
+      setState(() {
+        _errorMessage = 'Please enter a valid email address';
+      });
+      return;
+    }
+
+    if (_passwordController.text.length < 6) {
+      setState(() {
+        _errorMessage = 'Password must be at least 6 characters';
+      });
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _errorMessage = 'Passwords do not match';
+      });
+      return;
+    }
+
     if (!_agreeToTerms) {
       setState(() {
         _errorMessage = 'Please agree to the terms and conditions';
@@ -30,14 +81,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     });
 
     try {
-      await AuthService().signInWithGoogle();
+      await AuthService().signUpWithEmailPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
       if (mounted) {
+        // Pop back to sign in screen, the StreamBuilder will handle navigation to home
+        Navigator.of(context).pop();
+        // Call the callback to trigger any additional logic
         widget.onRegistrationSuccess();
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString();
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
         });
       }
     } finally {
@@ -99,12 +156,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Join us today with your Gmail account',
+                  'Create a new account',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
 
                 // Error message
                 if (_errorMessage != null)
@@ -121,6 +178,113 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                   ),
                 if (_errorMessage != null) const SizedBox(height: 24),
+
+                // Email field
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Email address',
+                    hintStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.email, color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Password field
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    hintStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.lock, color: Colors.white70),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Confirm password field
+                TextField(
+                  controller: _confirmPasswordController,
+                  obscureText: _obscureConfirmPassword,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Confirm password',
+                    hintStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.lock, color: Colors.white70),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
                 // Terms and conditions checkbox
                 Container(
@@ -164,13 +328,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 24),
 
                 // Sign up button
-                ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _handleGoogleSignUp,
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _handleSignUp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.deepPurple,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
+                      horizontal: 48,
                       vertical: 16,
                     ),
                     shape: RoundedRectangleBorder(
@@ -178,7 +342,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                     elevation: 4,
                   ),
-                  icon: _isLoading
+                  child: _isLoading
                       ? SizedBox(
                           width: 20,
                           height: 20,
@@ -189,14 +353,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             ),
                           ),
                         )
-                      : const Icon(Icons.person_add),
-                  label: Text(
-                    _isLoading ? 'Creating Account...' : 'Sign Up with Gmail',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                      : Text(
+                          _isLoading ? 'Creating Account...' : 'Create Account',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 32),
 
@@ -208,8 +371,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Your Gmail account will be used for authentication. We never store your password.',
-                    textAlign: TextAlign.center,
+                    'Create a secure account with email and password. Your data is encrypted and protected.',
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: Colors.white70),
