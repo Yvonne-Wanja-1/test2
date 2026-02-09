@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/auth_splash_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/update_password_screen.dart';
 import 'services/auth_service.dart';
 
 void main() async {
@@ -42,10 +43,12 @@ class AuthenticationWrapper extends StatefulWidget {
 
 class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
   bool _isFirstLaunch = true;
+  bool _isPasswordResetFlow = false;
 
   @override
   void initState() {
     super.initState();
+    _handleDeepLink();
     // Simulate first launch only once
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
@@ -56,10 +59,29 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
     });
   }
 
+  Future<void> _handleDeepLink() async {
+    // Listen for deep links
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+      if (event == AuthChangeEvent.passwordRecovery) {
+        if (mounted) {
+          setState(() {
+            _isPasswordResetFlow = true;
+          });
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isFirstLaunch) {
       return const AuthSplashScreen();
+    }
+
+    // If in password reset flow, show update password screen
+    if (_isPasswordResetFlow) {
+      return const UpdatePasswordScreen();
     }
 
     return StreamBuilder<AuthState>(
