@@ -251,13 +251,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           const SizedBox(height: 12),
           _buildProfileField(
             label: 'Account Created',
-            value: user?.createdAt.toLocal().toString().split('.')[0] ?? 'N/A',
+            value: user?.createdAt != null
+                ? DateTime.parse(
+                    user!.createdAt,
+                  ).toLocal().toString().split('.')[0]
+                : 'N/A',
           ),
           const SizedBox(height: 12),
           _buildProfileField(
             label: 'Last Sign In',
-            value:
-                user?.lastSignInAt?.toLocal().toString().split('.')[0] ?? 'N/A',
+            value: user?.lastSignInAt != null
+                ? DateTime.parse(
+                    user!.lastSignInAt!,
+                  ).toLocal().toString().split('.')[0]
+                : 'N/A',
           ),
 
           const SizedBox(height: 32),
