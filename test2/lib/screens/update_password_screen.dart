@@ -3,7 +3,10 @@ import '../services/auth_service.dart';
 import 'sign_in_screen.dart';
 
 class UpdatePasswordScreen extends StatefulWidget {
-  const UpdatePasswordScreen({Key? key}) : super(key: key);
+  final VoidCallback? onPasswordUpdateSuccess;
+
+  const UpdatePasswordScreen({Key? key, this.onPasswordUpdateSuccess})
+    : super(key: key);
 
   @override
   State<UpdatePasswordScreen> createState() => _UpdatePasswordScreenState();
@@ -70,15 +73,23 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
             'Password updated successfully! Redirecting to sign in...';
       });
 
-      // Redirect to sign in after 2 seconds
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => SignInScreen(onSignInSuccess: () {}),
-          ),
-          (route) => false,
-        );
+      // Call the success callback if provided
+      if (widget.onPasswordUpdateSuccess != null) {
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          widget.onPasswordUpdateSuccess!();
+        }
+      } else {
+        // Fallback: Redirect to sign in after 2 seconds
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => SignInScreen(onSignInSuccess: () {}),
+            ),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
