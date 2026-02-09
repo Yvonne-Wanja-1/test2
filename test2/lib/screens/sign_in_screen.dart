@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'registration_screen.dart';
 import 'password_reset_screen.dart';
+import 'home_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   final VoidCallback onSignInSuccess;
@@ -60,7 +61,11 @@ class _SignInScreenState extends State<SignInScreen> {
         password: _passwordController.text,
       );
       if (mounted) {
-        widget.onSignInSuccess();
+        // Navigate directly to HomeScreen after successful sign in
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {
